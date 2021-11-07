@@ -439,10 +439,32 @@ function hideColumns(accessor) {
     const column = columns.find((col) => col.accessor === accessor);
     column.hidden = true;
 
-    columns.splice(index, 1, column);
+    const trs = document.querySelectorAll('.table-row')
 
-    refs.wrapper.innerHTML = "";
-    createTable(columns, countries);
+    trs.forEach(tr => {
+        tr.querySelectorAll('.table-column').forEach((tc,ind) => {
+            if (ind === index) tc.classList.add('hidden')
+        })
+
+    })
+
+}
+
+function showColumns(accessor) {
+    const index = columns.findIndex((col) => col.accessor === accessor);
+    const column = columns.find((col) => col.accessor === accessor);
+    column.hidden = false;
+
+    const trs = document.querySelectorAll('.table-row')
+
+
+    trs.forEach(tr => {
+        tr.querySelectorAll('.table-column').forEach((tc,ind) => {
+            if (ind === index) tc.classList.remove('hidden')
+        })
+
+    })
+
 }
 
 
@@ -467,9 +489,11 @@ function сreateDropDownList() {
 
 function showDropDown(target, accessor) {
     const ul = target.querySelector('.select');
-    const column = columns.find(col => col.accessor === accessor)
-    column.toggle = false;
-    ul.classList.remove('hidden')
+    if (ul) {
+        const column = columns.find(col => col.accessor === accessor)
+        column.toggle = false;
+        ul.classList.remove('hidden')
+    }
 
 }
 
@@ -515,8 +539,8 @@ input.addEventListener("input", (event) => {
 });
 
 
-document.body.addEventListener('click',e=>{
-    if(!e.target.matches('.btn-more'))closeDropDown()
+document.body.addEventListener('click', e => {
+    if (!e.target.matches('.btn-more')) closeDropDown()
 })
 
 
@@ -569,6 +593,7 @@ th.forEach((hr) => {
         const accessor = event.currentTarget.dataset.accessor;
         if (event.target.closest(".btn-show")) {
             console.log('show')
+            showColumns(accessor)
         }
     });
 
@@ -578,7 +603,7 @@ th.forEach((hr) => {
         if (event.target.closest(".btn-more")) {
             console.log('click more')
             showDropDown(event.target, accessor)
-        } 
+        }
     })
 });
 
