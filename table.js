@@ -385,67 +385,37 @@ function bubbleSort(countries, accessor, sortingType, order = "asc") {
     return newArr;
 }
 
-Дима Js, [04.11.2021 23:59]
-[user]
-  name = IRS BRUTFORCE
-  email = alchynskairyna@gmail.com
-[alias]
-  ch = checkout
-  br = branch
-  com = commit
-  st = status
-  hist = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
-[core]
-  autocrlf = input
-  safecrlf = true
-  quotepath = off
-[credential]
-  helper = cache --timeout=1800
-
-Дима Js, [05.11.2021 0:01]
-пиздец ТА я зранку буду недоступен
-
-Дима Js, [05.11.2021 0:02]
-https://stackoverflow.com/questions/4220416/can-i-specify-multiple-users-for-myself-in-gitconfig
-
-Ірина, [06.11.2021 21:09]
-Всеодно не працює
-
-Дима Js, [07.11.2021 18:46]
-[ Photo ]
-
-Ірина, [07.11.2021 21:03]
 function makeSort(accessor, sortingType) {
-  let order = columns.find((c) => c.accessor === accessor).order;
+    let order = columns.find((c) => c.accessor === accessor).order;
 
-  const sortedData = bubbleSort(countries, accessor, sortingType, order);
-  const newOrder = order === "asc" ? "desc" : "asc";
+    const sortedData = bubbleSort(countries, accessor, sortingType, order);
+    const newOrder = order === "asc" ? "desc" : "asc";
 
-  columns.forEach((column) => {
-    if (column.accessor === accessor) {
-      column.order = newOrder;
-    } else {
-      column.order = "asc";
-    }
-  });
-  const tableBody = document.querySelector(".tbody");
-  tableBody.innerHTML = "";
-  const rows = createDataRows(columns, sortedData);
-  tableBody.append(...rows);
+    columns.forEach((column) => {
+        if (column.accessor === accessor) {
+            column.order = newOrder;
+        } else {
+            column.order = "asc";
+        }
+    });
+    const tableBody = document.querySelector(".tbody");
+    tableBody.innerHTML = "";
+    const rows = createDataRows(columns, sortedData);
+    tableBody.append(...rows);
 }
 
 function addListenersSort(order) {
-  const headerColumn = document.querySelectorAll(".header-column");
-  headerColumn.forEach((th) => {
-    th.addEventListener("click", (event) => {
-      const accessor = event.currentTarget.dataset.accessor;
-      const sortingType = event.currentTarget.dataset.sorting;
+    const headerColumn = document.querySelectorAll(".header-column");
+    headerColumn.forEach((th) => {
+        th.addEventListener("click", (event) => {
+            const accessor = event.currentTarget.dataset.accessor;
+            const sortingType = event.currentTarget.dataset.sorting;
 
-      if (event.target.closest("button.btn-arrow")) {
-        makeSort(accessor, sortingType, order);
-      }
+            if (event.target.closest("button.btn-arrow")) {
+                makeSort(accessor, sortingType, order);
+            }
+        });
     });
-  });
 }
 
 function createFilterRow() {
