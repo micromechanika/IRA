@@ -247,6 +247,7 @@ div.id-column-header {
   text-align: center;
   border-color: transparent;
 }
+
 .button-more {
   position: relative;
 }
@@ -300,6 +301,6 @@ div.id-column-header {
 .list{
   width: 100%;
 }
- .active {
+ .hidden {
   display: none;
 }
