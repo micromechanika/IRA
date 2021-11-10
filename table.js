@@ -1,29 +1,47 @@
-import { countries, columns } from "./data.js";
+import { columns } from "./data.js";
+import { createCheckbox, addListenerCheckbox } from "./checkbox.js";
+import { makeSort } from "./sort.js";
+import { createFilterRow, addListenersFilter } from "./filter.js";
+//import addListenersHideColumns from "./hide-columns.js";
+import { createButton } from "./button.js";
+import {
+  createDropDownList,
+  openDropDown,
+  closeDropDown,
+} from "./create-dropdown.js";
+import hideColumns from "./hide-columns.js";
+import { showColumns } from "./show-columns.js";
+import { fetchCountries } from "./fetch-countries.js";
 
-const refs = {
+export const refs = {
   wrapper: document.querySelector("#wrapper"),
-  //headerCheckbox: document.querySelectorAll(".selectAll"),
 };
+
+let countries = [];
+fetchCountries()
+  .then((data) => {
+    countries = data;
+    createTable(columns, countries);
+  })
+  .catch((error) => console.error(error));
 
 //function which is creating the header of table
 function createHeaders(columns) {
-  //row of headers
+  //row of header
   const headersRow = document.createElement("div");
   headersRow.classList.add("header-row");
-
   //checkbox for header
   const headerCheckbox = createCheckbox();
   headersRow.append(headerCheckbox);
   headerCheckbox.classList.add("selectAll");
   const headerCells = columns.map((column) => createHeaderCell(column));
   //add all cells to header
-
   headersRow.append(...headerCells);
 
   return headersRow;
 }
 
-function createHeaderCell(column) {
+export function createHeaderCell(column) {
   const headerBorder = document.createElement("div");
   headerBorder.classList.add("headerBorder");
   if (column.hidden) {
@@ -46,35 +64,31 @@ function createHeaderCell(column) {
   const btnMore = "btn-more";
   const iconArrow = createButton(arrow, btnArrow);
 
-  const iconMore = createButton(more, btnMore);
+  const buttonMore = createButton(more, btnMore, column.accessor);
+
   const buttonWrapper = document.createElement("div");
   buttonWrapper.classList.add("button-wrapper");
-  buttonWrapper.append(iconArrow, iconMore);
+  buttonWrapper.append(iconArrow, buttonMore);
   headerCell.append(buttonWrapper);
 
   return headerBorder;
 }
 
 //the function that creates body of table it takes array of columns and countries
-function createCells(columns, countries) {
+export function createDataRows(columns, countries) {
   // row in body table
-
   const rows = countries.map((country) => {
     const row = document.createElement("div");
     row.classList.add("table-row");
-
     // create checkboxes for the bodyRows
     const bodyCheckbox = createCheckbox();
     row.append(bodyCheckbox);
     //created cells in the body table
-
     const cells = columns.map((column) => createTableCells(country, column));
 
     row.append(...cells);
-
     return row;
   });
-
   return rows;
 }
 
@@ -91,7 +105,7 @@ function createTableCells(country, column) {
 }
 
 // main function for the table
-function createTable(columns, countries) {
+export function createTable(columns, countries) {
   const table = document.createElement("table");
   table.classList.add("table");
   const thead = document.createElement("div");
@@ -102,7 +116,7 @@ function createTable(columns, countries) {
 
   const filterInput = createFilterRow();
 
-  const rows = createCells(columns, countries);
+  const rows = createDataRows(columns, countries);
 
   refs.wrapper.append(table);
   table.append(thead);
@@ -110,69 +124,34 @@ function createTable(columns, countries) {
   thead.append(headerRow, filterInput);
 
   tbody.append(...rows);
-  // buttons
 
   //listeners
-  //addListenersHideColumns();
+  createModal();
+
+  addListenersSort();
+  addListenerCheckbox();
+  addListenersFilter();
+  addEventListenerHideColumns();
+  addEventListenerShowColumns();
+  addEventListenerOpenDropDown();
+  addEventListenerMakeAscSort();
+  addEventListenerMakeDescSort();
+  createDropDownList();
+  addEventListenerOnOpenModal();
+  addEventListenerOnCloseModal();
+  addEventListenerOnOverlayClose();
 }
 
-createTable(columns, countries);
+// add event listeners
 
-function createButton(fontAwesomeIcon, buttonClass) {
-  const button = document.createElement("button");
-  button.classList.add(buttonClass);
-  const icon = document.createElement("i");
-  const iconarr = fontAwesomeIcon.split(" ");
-  iconarr.map((cl) => {
-    return icon.classList.add(cl);
-  });
-  button.appendChild(icon);
-
-  return button;
-}
-
-function createCheckbox() {
-  const checkbox = document.createElement("input");
-  checkbox.type = "checkbox";
-  checkbox.classList.add("input");
-  return checkbox;
-}
-
-const selectAllRef = document.querySelector(".selectAll");
-selectAllRef.addEventListener("click", (event) => {
-  const allCheckboxes = document.querySelectorAll(".input");
-  allCheckboxes.forEach((checkbox) => {
-    checkbox.checked = event.target.checked;
-  });
+document.body.addEventListener("click", (e) => {
+  console.log(e);
+  if (!e.target.matches(".btn-more")) closeDropDown();
 });
 
-function bubbleSort(countries, accessor, sortingType, order = "asc") {
-  const newArr = [...countries];
-
-  for (let i = 0; i < newArr.length - 1; i++) {
-    for (let j = 0; j < newArr.length - 1 - i; j++) {
-      if (sortingType === "number") {
-        if (newArr[j][accessor] > newArr[j + 1][accessor]) {
-          [newArr[j], newArr[j + 1]] = [newArr[j + 1], newArr[j]];
-        }
-      } else if (sortingType === "string") {
-        if (newArr[j][accessor].localeCompare(newArr[j + 1][accessor]) > 0) {
-          [newArr[j], newArr[j + 1]] = [newArr[j + 1], newArr[j]];
-        }
-      }
-    }
-  }
-
-  if (order === "desc") {
-    const ascSort = [...newArr].reverse();
-    console.log(ascSort);
-    return ascSort;
-  }
-  return newArr;
-}
-function addListenetSort(order) {
+// arrow sort
+function addListenersSort(order) {
   const headerColumn = document.querySelectorAll(".header-column");
-  //const arrow = document.querySelector(".fa-arrow-up");
   headerColumn.forEach((th) => {
     th.addEventListener("click", (event) => {
       const accessor = event.currentTarget.dataset.accessor;
@@ -185,176 +164,186 @@ function addListenetSort(order) {
   });
 }
 
-addListenetSort();
+//asc
+function addEventListenerMakeAscSort() {
+  const headerColumn = document.querySelectorAll(".header-column");
+  headerColumn.forEach((th) => {
+    th.addEventListener("click", (event) => {
+      const accessor = event.currentTarget.dataset.accessor;
+      const sortingType = event.currentTarget.dataset.sorting;
+      if (event.target.closest("button .btn-asc")) {
+        console.log("sort asc");
+        makeSort(accessor, sortingType);
+      }
+    });
+  });
+}
 
-function makeSort(accessor, sortingType) {
-  let order = columns.find((c) => c.accessor === accessor).order;
-  const sortingData = bubbleSort(countries, accessor, sortingType, order);
-  const newOrder = order === "asc" ? "desc" : "asc";
+//desc
+function addEventListenerMakeDescSort() {
+  const headerColumn = document.querySelectorAll(".header-column");
+  headerColumn.forEach((th) => {
+    th.addEventListener("click", (event) => {
+      const accessor = event.currentTarget.dataset.accessor;
+      const sortingType = event.currentTarget.dataset.sorting;
+      if (event.target.closest("button .btn-desc")) {
+        console.log("sort desc");
+        makeSort(accessor, sortingType);
+      }
+    });
+  });
+}
 
-  columns.forEach((column) => {
-    if (column.accessor === accessor) {
-      column.order = newOrder;
-      //arrow.style.transform = "rotate(180deg)";
-    } else {
-      column.order = "asc";
+//hide
+function addEventListenerHideColumns() {
+  const headerColumn = document.querySelectorAll(".header-column");
+  headerColumn.forEach((th) => {
+    th.addEventListener("click", (event) => {
+      const accessor = event.currentTarget.dataset.accessor;
+      if (event.target.closest(".btn-hide")) {
+        console.log("hide");
+        hideColumns(accessor);
+      }
+    });
+  });
+}
+
+//show
+function addEventListenerShowColumns() {
+  const headerColumn = document.querySelectorAll(".header-column");
+  headerColumn.forEach((th) => {
+    th.addEventListener("click", (event) => {
+      const accessor = event.currentTarget.dataset.accessor;
+      if (event.target.closest(".btn-show")) {
+        console.log("show");
+        showColumns(accessor);
+      }
+    });
+  });
+}
+
+//drop down
+function addEventListenerOpenDropDown() {
+  const headerColumn = document.querySelectorAll(".header-column");
+  headerColumn.forEach((th) => {
+    th.addEventListener("click", (event) => {
+      const accessor = event.currentTarget.dataset.accessor;
+      if (event.target.closest(".btn-more")) {
+        openDropDown(event.target, accessor);
+      }
+    });
+  });
+}
+
+//open modal
+
+function createModal() {
+  const rows = document.querySelectorAll(".table-row");
+  rows.forEach((row) => {
+    const modal = document.createElement("div");
+    modal.classList.add("modal");
+
+    modal.insertAdjacentHTML(
+      "afterbegin",
+      `<div class="modal-overlay" data-close = "true">
+        <div class="modal-window">
+          <div class="modal-header">
+            <span class="modal-title">Update Country Data</span>
+            <span class="modal-close" data-close = "true">&times;</span>
+          </div>
+          <div class="modal-content"></div>
+        </div>
+      </div> `
+    );
+    row.appendChild(modal);
+
+    return modal;
+  });
+  CreateModalForm();
+}
+
+function onOpenModal() {
+  const modalRef = document.querySelector(".modal");
+  modalRef.classList.add("open");
+}
+
+function onCloseModal() {
+  const modalRef = document.querySelector(".modal");
+  modalRef.classList.remove("modal-none");
+}
+
+function addEventListenerOnOpenModal() {
+  const rows = document.querySelectorAll(".table-row");
+  rows.forEach((row) => {
+    row.addEventListener("click", (event) => {
+      if (event.target) {
+        onOpenModal();
+      }
+    });
+  });
+}
+
+function addEventListenerOnCloseModal() {
+  const closeModal = document.querySelector(".modal-close");
+  closeModal.addEventListener("click", (event) => {
+    if (event.target === closeModal) onCloseModal();
+  });
+}
+
+function addEventListenerOnOverlayClose() {
+  const overlayRef = document.querySelector(".modal-overlay");
+  overlayRef.addEventListener("click", (event) => {
+    if (event.target == overlayRef) {
+      overlayRef.style.display = "none";
+      onCloseModal();
     }
   });
-  const tableRow = document.querySelector(".tbody");
-  tableRow.innerHTML = "";
-  const rows = createCells(columns, sortingData);
-  tableRow.append(...rows);
 }
 
-function createFilterRow() {
-  const filterRow = document.createElement("div");
-  filterRow.classList.add("filter-row");
-  const labelName = document.createElement("label");
-  labelName.classList.add("filter-label");
-  labelName.innerHTML = "Country name";
-  const filterInput = document.createElement("input");
-  filterInput.type = "text";
-  filterInput.placeholder = "Enter country name";
-  filterInput.classList.add("filter-input");
-  labelName.append(filterInput);
-  filterRow.append(labelName);
-  return filterRow;
-}
+function CreateModalForm() {
+  const modalContent = document.querySelector(".modal-content");
+  const modalForm = document.createElement("form");
+  modalForm.classList.add("modal-form");
+  modalForm.insertAdjacentHTML(
+    "afterbegin",
+    `<label class="label-form" htmlFor="id">ID</label>
+    <input type="text" name="id" placeholder="Edit id"  class="input-form"/>
+    <label class="label-form" htmlFor="name">NAME</label>
+    <input
+      type="text"
+      name="country"
+      placeholder="Edit country"
+      class="input-form"
+    />
+    <label class="label-form" htmlFor="iso">ISO</label>
+    <input type="text" name="iso" placeholder="Edit iso" class="input-form"/>
+    <label class="label-form" htmlFor="capital">CAPITAL</label>
+    <input
+      type="text"
+      name="capital"
+      placeholder="Edit capital"
+      class="input-form"
+      
+    />
+    <label class="label-form" htmlFor="currency">CURRENCY</label>
+    <input
+      type="text"
+      name="currency"
+      placeholder="Edit currency"
+      class="input-form"
+    />
+    <label class="label-form" htmlFor="phone_code">PHONE_CODE</label>
+    <input
+      type="text"
+      name="phone_code"
+      placeholder="Edit phone_code"
+      class="input-form"
+    />
 
-const input = document.querySelector(".filter-input");
-const tableRow = document.querySelector(".tbody");
-input.addEventListener("input", (event) => {
-  filterTableByName(event, columns);
-});
-
-function filterTableByName(event, columns) {
-  tableRow.innerHTML = "";
-
-  const name = columns.find((c) => c.accessor === "name");
-  if (!name) {
-    return;
-  }
-  const filteredItems = countries.filter((country) => country.name.toLowerCase().includes(event.target.value.toLowerCase()));
-  const filter = createCells(columns, filteredItems);
-  tableRow.append(...filter);
-}
-
-// function addListenersHideColumns() {
-//   const headerColumnsToHide = document.querySelectorAll(".header-column");
-//   headerColumnsToHide.forEach((th) => {
-//     th.addEventListener("click", (event) => {
-//       if (event.target.closest("button.btn-more")) {
-//         const accessor = event.currentTarget.dataset.accessor;
-//         hideColumns(accessor);
-//       }
-//     });
-//   });
-// }
-
-function hideColumns(accessor) {
-  const index = columns.findIndex((col) => col.accessor === accessor);
-  const column = columns.find((col) => col.accessor === accessor);
-  column.hidden = true;
-
-  columns.splice(index, 1, column);
-
-  refs.wrapper.innerHTML = "";
-  createTable(columns, countries);
-}
-
-function CreateDropDownList() {
-  const buttonsMore = document.querySelectorAll(".btn-more");
-  buttonsMore.forEach((button) => {
-    const select = `
-    <ul class='select active'>
-          <li class="list asc"><button class= "button-list btn-asc" data-attribute ="accessor">Sort by ASC</button></li>
-          <li class="list desc"><button class="button-list btn-desc" data-attribute ="accessor">Sort by DESC</button></li>
-          <li class="list hide-column"><button class="button-list btn-hide" data-attribute ="accessor">HIDE</button></li>
-          <li class="list desc"><button class="button-list btn-show" data-attribute ="accessor">SHOW ALL</button></li>
-    </ul>`;
-
-    return (button.innerHTML += select);
-  });
-}
-
-CreateDropDownList();
-
-function toggleMenu() {
-  const tr = document.querySelectorAll(".header-column");
-  tr.forEach((th) => {
-    th.addEventListener("click", (event) => {
-      const target = event.target;
-      const accessor = event.currentTarget.dataset.accessor;
-      if (target.tagName === "BUTTON") {
-        const isMore = target.classList.contains("btn-more");
-        if (isMore) {
-          showDropDown(target, accessor);
-        }
-      }
-    });
-  });
-}
-
-toggleMenu();
-
-function showDropDown(target, accessor) {
-  const ul = target.querySelector(".select");
-  const column = columns.find((col) => col.accessor === accessor);
-  if (column.toggle) {
-    column.toggle = false;
-    ul.classList.remove("active");
-  } else {
-    column.toggle = true;
-    ul.classList.add("active");
-  }
-}
-
-function DropdownOptions() {
-  //const options = document.querySelectorAll(".button-list");
-
-  const tr = document.querySelectorAll(".header-column");
-  tr.forEach((th) => {
-    const column = find((col) => col.accessor === accessor);
-    th.addEventListener("click", (event) => {
-      const target = event.target;
-      console.log(target);
-      const accessor = event.currentTarget.dataset.accessor;
-      console.log(accessor);
-
-      if (target.textContent === "ASC") {
-        console.log("HIDE, 325", target);
-        const asc = target.classList.contains("btn-asc");
-        if (asc) {
-          makeSort(accessor, sortingType, order);
-        }
-      }
-      if (target.textContent === "DESC") {
-        console.log(target.textContent);
-        const desc = target.classList.contains("btn-desc");
-        if (desc) {
-          makeSort(accessor, sortingType, order);
-        }
-      }
-      if (target.textContent === "HIDE") {
-        console.log("HIDE, 339", target);
-        const hide = target.classList.contains("btn-hide");
-        if (hide) {
-          hideColumns(accessor);
-        }
-      }
-      if (target.textContent === "SHOW ALL") {
-        const show = target.classList.contains("btn-show");
-        if (show) {
-          showAllColumns(accessor);
-        }
-      }
-    });
-  });
-}
-DropdownOptions();
-
-//function CreatePagination() {}
-function showAllColumns() {
-  refs.wrapper.innerHTML = "";
-  createTable(columns, countries);
+    <button type="submit" class="button-form">Edit</button>
+  `
+  );
+  modalContent.appendChild(modalForm);
+  console.log(modalForm);
+  return modalForm;
 }
