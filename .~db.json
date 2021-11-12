@@ -10,7 +10,7 @@
     },
     {
       "id": 2,
-      "name": "Aland Islands",
+      "name": "USA",
       "iso3": "ALA",
       "iso2": "AX",
       "numeric_code": "248",
@@ -52,12 +52,12 @@
     },
     {
       "id": 3,
-      "name": "Albania",
+      "name": "Poland",
       "iso3": "ALB",
       "iso2": "AL",
       "numeric_code": "008",
       "phone_code": "355",
-      "capital": "Tirana",
+      "capital": "Warzaw",
       "currency": "ALL",
       "currency_symbol": "Lek",
       "tld": ".al",
